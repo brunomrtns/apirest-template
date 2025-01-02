@@ -60,7 +60,7 @@ const onlineUsers = new Map();
 const chatController = require("./chats/ChatController")(io, onlineUsers);
 
 app.use("/", chatController);
-
+// rota de sobrevivencia
 app.get("/", (req, res) => {
   res.status(200).json({ status: "🟢 API está rodando corretamente!" });
 });
