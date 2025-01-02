@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
-const connection = require("../database/database");
-require('dotenv').config(); // Load environment variables
+const connection = require("../app/database/database");
+require("dotenv").config(); // Load environment variables
 
 const Category = connection.define("categories", {
   title: {
@@ -13,7 +13,6 @@ const Category = connection.define("categories", {
   },
 });
 
-Category.sync({ force: process.env.SYNC_DATABASE === 'true' });
+Category.sync({ force: process.env.SYNC_DATABASE === "true" });
 
 module.exports = Category;
-

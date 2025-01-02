@@ -7,7 +7,7 @@ const swaggerDocs = require("./swagger.json");
 const userController = require("./users/UserController");
 const categoriesController = require("./categories/CategoriesController");
 const articlesController = require("./articles/ArticlesController");
-const connection = require("./database/database");
+const connection = require("./app/database/database");
 const path = require("path");
 require("dotenv").config();
 
@@ -64,7 +64,6 @@ app.use("/", chatController);
 app.get("/", (req, res) => {
   res.status(200).json({ status: "🟢 API está rodando corretamente!" });
 });
-
 
 // Socket.IO eventos
 io.on("connection", (socket) => {
