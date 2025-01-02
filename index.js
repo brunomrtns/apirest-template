@@ -94,7 +94,7 @@ io.on("connection", (socket) => {
 
 // Definir a porta
 const port = process.env.PORT || 8080;
-
+//
 // Iniciar o servidor
 if (!module.parent) {
   server.listen(port, () => {
