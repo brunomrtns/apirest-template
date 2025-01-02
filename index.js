@@ -1,34 +1,55 @@
 const express = require("express");
-const app = express();
-const https = require("https");
-const fs = require("fs");
 const cors = require("cors");
-const { Server } = require("socket.io");
 const bodyParser = require("body-parser");
-const userController = require("./users/UserController");
-const connection = require("./database/database");
 const session = require("express-session");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./swagger.json");
-const socketIo = require("socket.io");
+const userController = require("./users/UserController");
 const categoriesController = require("./categories/CategoriesController");
-const articlesController = require("./articles/ArticlesController.js");
+const articlesController = require("./articles/ArticlesController");
+const connection = require("./database/database");
 const path = require("path");
 require("dotenv").config();
 
+const app = express();
+
+// Diretório de uploads
 const uploadsDir = path.join(__dirname, "uploads");
+app.use("/uploads", express.static(uploadsDir));
 
-const port = 8443;
+// Middlewares
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(
+  session({
+    secret: process.env.SECRET_KEY || "default_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 30000000 },
+  })
+);
 
-const options = {
-  key: fs.readFileSync(path.join(__dirname, "keys", "key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "keys", "cert.pem")),
-};
+// Swagger Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-const server = https.createServer(options, app);
-const io = socketIo(server, {
+// Conexão com o Banco de Dados
+connection
+  .authenticate()
+  .then(() => console.log("🟢 Banco de dados conectado com sucesso!"))
+  .catch((err) => console.error("🔴 Erro ao conectar no banco:", err));
+
+// Controllers
+app.use("/", userController);
+app.use("/", categoriesController);
+app.use("/", articlesController);
+
+// Configuração do Socket.IO
+const server = require("http").createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, {
   cors: {
-    origin: `${process.env.INTERFACE_IP}`,
+    origin: process.env.INTERFACE_IP || "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Authorization"],
     credentials: true,
@@ -36,57 +57,25 @@ const io = socketIo(server, {
 });
 
 const onlineUsers = new Map();
-
-app.use("/uploads", express.static(uploadsDir));
-
 const chatController = require("./chats/ChatController")(io, onlineUsers);
 
-app.use(express.static("public"));
-app.use(cors());
+app.use("/", chatController);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(
-  session({
-    secret: "chat",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30000000,
-    },
-  })
-);
-
-connection
-  .authenticate()
-  .then(() => {
-    console.log("Connection success");
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
-app.use((req, res, next) => {
-  res.locals.successMessage = req.session.successMessage;
-  delete req.session.successMessage;
-  next();
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "🟢 API está rodando corretamente!" });
 });
 
-app.use("/", userController);
-app.use("/", chatController);
-app.use("/", categoriesController);
-app.use("/", articlesController);
 
+// Socket.IO eventos
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  console.log("🟢 Usuário conectado");
 
   socket.on("registerUser", (userId) => {
     onlineUsers.set(userId, socket.id);
   });
 
   socket.on("disconnect", () => {
-    console.log("user disconnected");
+    console.log("🔴 Usuário desconectado");
     for (let [userId, socketId] of onlineUsers.entries()) {
       if (socketId === socket.id) {
         onlineUsers.delete(userId);
@@ -104,10 +93,13 @@ io.on("connection", (socket) => {
   });
 });
 
+// Definir a porta
+const port = process.env.PORT || 8080;
+
+// Iniciar o servidor
 server.listen(port, () => {
-  console.log(
-    "=========================\n| Rodando na porta " +
-      port +
-      " |\n========================="
-  );
+  console.log(`🚀 Servidor rodando na porta ${port}`);
 });
+
+// Exportação do app para a Vercel
+module.exports = app;
