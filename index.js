@@ -96,9 +96,11 @@ io.on("connection", (socket) => {
 const port = process.env.PORT || 8080;
 
 // Iniciar o servidor
-server.listen(port, () => {
-  console.log(`🚀 Servidor rodando na porta ${port}`);
-});
+if (!module.parent) {
+  server.listen(port, () => {
+    console.log(`🚀 Servidor rodando na porta ${port}`);
+  });
+}
 
 // Exportação do app para a Vercel
 module.exports = app;

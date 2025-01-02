@@ -8,47 +8,60 @@ const auth = require("../middlewares/auth");
 
 const JWTSecret = process.env.JWT_SECRET;
 router.post("/authenticate", (req, res) => {
-  var emailOrUsername = req.body.emailOrUsername;
-  var password = req.body.password;
+  const emailOrUsername = req.body.emailOrUsername;
+  const password = req.body.password;
+
+  if (!emailOrUsername || !password) {
+    return res
+      .status(400)
+      .json({ err: "Campos 'emailOrUsername' e 'password' são obrigatórios" });
+  }
+
   User.findOne({
     where: {
       [Op.or]: [{ email: emailOrUsername }, { username: emailOrUsername }],
     },
-  }).then((user) => {
-    if (user != undefined) {
-      var correct = bcrypt.compareSync(password, user.password);
-      if (correct) {
-        jwt.sign(
-          {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-          },
-          JWTSecret,
-          { expiresIn: "48h" },
-          (err, token) => {
-            if (err) {
-              res.status(400).json({ err: "Falha interna" });
-            } else {
-              res.status(200).json({
-                token: token,
-                user: {
-                  id: user.id,
-                  email: user.email,
-                  username: user.username,
-                  type: user.type,
-                },
-              });
+  })
+    .then((user) => {
+      if (user != undefined) {
+        const correct = bcrypt.compareSync(password, user.password);
+        if (correct) {
+          jwt.sign(
+            {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+            },
+            JWTSecret,
+            { expiresIn: "48h" },
+            (err, token) => {
+              if (err) {
+                console.error("Erro ao gerar token JWT:", err);
+                return res.status(400).json({ err: "Falha interna" });
+              } else {
+                res.status(200).json({
+                  token: token,
+                  user: {
+                    id: user.id,
+                    email: user.email,
+                    username: user.username,
+                    type: user.type,
+                  },
+                });
+              }
             }
-          }
-        );
+          );
+        } else {
+          res.status(401).json({ err: "Credenciais inválidas" });
+        }
       } else {
-        res.status(401).json({ err: "Credenciais invalidas" });
+        res.status(401).json({ err: "Credenciais inválidas" });
       }
-    } else {
-      res.status(401).json({ err: "Credenciais invalidas" });
-    }
-  });
+    })
+    .catch((error) => {
+      console.error("Erro na busca do usuário:", error);
+      res.status(500).json({ err: "Erro interno ao autenticar" });
+    });
 });
 
 router.post("/users/create", async (req, res) => {
