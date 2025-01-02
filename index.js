@@ -13,7 +13,7 @@ require("dotenv").config();
 
 const app = express();
 
-// Diretório de uploads
+// Diretório de uploads //
 const uploadsDir = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadsDir));
 
