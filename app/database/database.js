@@ -1,4 +1,5 @@
 const { Sequelize } = require("sequelize");
+import pg from "pg";
 require("dotenv").config();
 
 // Pega a URL de conexão do banco de dados a partir do .env
@@ -7,6 +8,7 @@ const databaseUrl = process.env.DATABASE_URL;
 const sequelize = new Sequelize(databaseUrl, {
   dialect: "postgres", // Defina o dialeto como postgres, pois você está usando PostgreSQL
   logging: false, // Se você quiser desativar o log SQL
+  dialectModule: pg,
 });
 
 sequelize
