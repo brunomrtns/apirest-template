@@ -24,6 +24,8 @@ app.use(
     credentials: false, // Não permite envio de cookies ou credenciais
   })
 );
+app.options("*", cors()); // Responde a todas as requisições OPTIONS
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(

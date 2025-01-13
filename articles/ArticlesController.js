@@ -34,14 +34,17 @@ router.use((req, res, next) => {
 });
 
 router.post("/upload", upload.single("file"), (req, res) => {
+  console.log("Arquivo recebido:", req.file); // Log do arquivo enviado
+
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
 
-  // O Cloudinary retorna a URL pública em req.file.path
-  const link = req.file.path;
-  res.json({
-    link, // Retorna a URL correta gerada pelo Cloudinary
+  const link = req.file.path; // URL gerada pelo Cloudinary
+  console.log("URL gerada:", link);
+
+  return res.status(200).json({
+    link, // Resposta para o Froala
   });
 });
 
