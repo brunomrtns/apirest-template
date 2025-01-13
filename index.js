@@ -16,7 +16,14 @@ const app = express();
 const uploadsDir = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadsDir));
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // Permite qualquer origem
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Métodos permitidos
+    allowedHeaders: ["Content-Type", "Authorization"], // Cabeçalhos permitidos
+    credentials: false, // Não permite envio de cookies ou credenciais
+  })
+);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(
