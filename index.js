@@ -13,11 +13,9 @@ require("dotenv").config();
 
 const app = express();
 
-// Diretório de uploads //
 const uploadsDir = path.join(__dirname, "uploads");
 app.use("/uploads", express.static(uploadsDir));
 
-// Middlewares
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -30,21 +28,17 @@ app.use(
   })
 );
 
-// Swagger Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Conexão com o Banco de Dados
 connection
   .authenticate()
   .then(() => console.log("🟢 Banco de dados conectado com sucesso!"))
   .catch((err) => console.error("🔴 Erro ao conectar no banco:", err));
 
-// Controllers
 app.use("/", userController);
 app.use("/", categoriesController);
 app.use("/", articlesController);
 
-// Configuração do Socket.IO
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
@@ -60,12 +54,11 @@ const onlineUsers = new Map();
 const chatController = require("./chats/ChatController")(io, onlineUsers);
 
 app.use("/", chatController);
-// rota de sobrevivencia
+
 app.get("/", (req, res) => {
   res.status(200).json({ status: "🟢 API está rodando corretamente!" });
 });
 
-// Socket.IO eventos
 io.on("connection", (socket) => {
   console.log("🟢 Usuário conectado");
 
@@ -92,15 +85,12 @@ io.on("connection", (socket) => {
   });
 });
 
-// Definir a porta
 const port = process.env.PORT || 8080;
-//
-// Iniciar o servidor
+
 if (!module.parent) {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando na porta ${port}`);
   });
 }
 
-// Exportação do app para a Vercel
 module.exports = app;

@@ -33,7 +33,6 @@ router.post("/upload", upload.single("file"), (req, res) => {
   });
 });
 
-
 router.get("/admin/articles", (req, res) => {
   Article.findAll({
     include: [{ model: Category }],
@@ -99,27 +98,24 @@ router.post(
       console.error("Error creating article:", err);
       res.status(500).json({ error: "Internal Server Error" });
     }
-  },
+  }
 );
 
 const deleteArticleAndRelated = async (id, transaction) => {
-  // Encontre todos os artigos que têm o artigo principal como relatedArticleId
   const relatedArticles = await Article.findAll({
     where: {
-      relatedArticleId: id
+      relatedArticleId: id,
     },
-    transaction
+    transaction,
   });
 
-  // Recursivamente deletar artigos relacionados
   for (const article of relatedArticles) {
     await deleteArticleAndRelated(article.id, transaction);
   }
 
-  // Agora deletar o artigo principal
   await Article.destroy({
     where: { id: id },
-    transaction
+    transaction,
   });
 };
 
@@ -127,36 +123,33 @@ router.post("/articles/delete", auth, (req, res) => {
   const id = req.body.id;
 
   if (id !== undefined && !isNaN(id)) {
-    Article.sequelize.transaction(transaction => {
-      return Article.findAll({
-        where: {
-          [Op.or]: [
-            { id: id },
-            { relatedArticleId: id }
-          ]
-        },
-        transaction
-      }).then(articles => {
-        // Desassociar os artigos relacionados
-        const updatePromises = articles.map(article => {
-          return article.update({ relatedArticleId: null }, { transaction });
-        });
-
-        // Esperar todas as atualizações de desassociação
-        return Promise.all(updatePromises).then(() => {
-          // Deletar os artigos
-          const deletePromises = articles.map(article => {
-            return article.destroy({ transaction });
+    Article.sequelize
+      .transaction((transaction) => {
+        return Article.findAll({
+          where: {
+            [Op.or]: [{ id: id }, { relatedArticleId: id }],
+          },
+          transaction,
+        }).then((articles) => {
+          const updatePromises = articles.map((article) => {
+            return article.update({ relatedArticleId: null }, { transaction });
           });
 
-          return Promise.all(deletePromises);
+          return Promise.all(updatePromises).then(() => {
+            const deletePromises = articles.map((article) => {
+              return article.destroy({ transaction });
+            });
+
+            return Promise.all(deletePromises);
+          });
         });
+      })
+      .then(() => {
+        res.status(204).send();
+      })
+      .catch((err) => {
+        res.status(500).json({ error: err.message });
       });
-    }).then(() => {
-      res.status(204).send();
-    }).catch(err => {
-      res.status(500).json({ error: err.message });
-    });
   } else {
     res.status(400).json({ error: "Invalid ID" });
   }
@@ -221,7 +214,7 @@ router.post(
           language: language,
           relatedArticleId: relatedArticleId || null,
         },
-        { where: { id: id } },
+        { where: { id: id } }
       );
 
       if (updatedArticle[0] === 1) {
@@ -244,7 +237,7 @@ router.post(
         .status(500)
         .json({ error: "An error occurred while saving the article." });
     }
-  },
+  }
 );
 
 router.get("/articles/:id", async (req, res) => {

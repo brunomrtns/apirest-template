@@ -4,7 +4,6 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // Criando a tabela 'users'
     await queryInterface.createTable("users", {
       id: {
         type: Sequelize.INTEGER,
@@ -47,7 +46,6 @@ module.exports = {
       },
     });
 
-    // Criando a tabela 'categories'
     await queryInterface.createTable("categories", {
       id: {
         type: Sequelize.INTEGER,
@@ -72,7 +70,6 @@ module.exports = {
       },
     });
 
-    // Criando a tabela 'chats'
     await queryInterface.createTable("chats", {
       id: {
         type: Sequelize.INTEGER,
@@ -109,7 +106,6 @@ module.exports = {
       },
     });
 
-    // Criando a tabela 'articles'
     await queryInterface.createTable("articles", {
       id: {
         type: Sequelize.INTEGER,
@@ -158,7 +154,6 @@ module.exports = {
       },
     });
 
-    // Criando a tabela de relacionamento entre 'articles' e 'categories' (tabela de junção)
     await queryInterface.createTable("ArticleCategories", {
       articleId: {
         type: Sequelize.INTEGER,
@@ -180,7 +175,6 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    // Remover as tabelas se necessário
     await queryInterface.dropTable("users");
     await queryInterface.dropTable("categories");
     await queryInterface.dropTable("chats");

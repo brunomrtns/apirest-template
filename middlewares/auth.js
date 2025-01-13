@@ -2,8 +2,6 @@ const jwt = require("jsonwebtoken");
 
 const JWTSecret = `${process.env.JWT_SECRET}`;
 
-// const JWTSecret = "gnhsdfiugh754587";
-
 function auth(req, res, next) {
   const authToken = req.headers["authorization"];
   if (authToken != undefined) {

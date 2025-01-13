@@ -2,7 +2,7 @@ const express = require("express");
 const { Sequelize } = require("sequelize");
 const connection = require("../app/database/database");
 const Category = require("../categories/Category");
-require("dotenv").config(); // Load environment variables
+require("dotenv").config();
 
 const Article = connection.define("articles", {
   title: {

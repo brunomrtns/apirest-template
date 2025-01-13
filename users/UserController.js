@@ -118,7 +118,7 @@ router.put("/users/update-email", auth, async (req, res) => {
         .json({ err: "O email já está em uso por outro usuário." });
     }
 
-    await User.update({ email }, { where: { id: req.loggedUser.id } }); // Alterado para req.loggedUser.id
+    await User.update({ email }, { where: { id: req.loggedUser.id } });
     res.status(200).json({ success: "Email atualizado com sucesso." });
   } catch (error) {
     res.status(500).json({ err: "Erro ao atualizar o email.", error });
@@ -141,10 +141,7 @@ router.put("/users/update-username", auth, async (req, res) => {
         .json({ err: "O nome de usuário já está em uso por outro usuário." });
     }
 
-    await User.update(
-      { username },
-      { where: { id: req.loggedUser.id } } // Alterado para req.loggedUser.id
-    );
+    await User.update({ username }, { where: { id: req.loggedUser.id } });
     res
       .status(200)
       .json({ success: "Nome de usuário atualizado com sucesso." });
@@ -162,10 +159,7 @@ router.put("/users/update-name", auth, async (req, res) => {
   }
 
   try {
-    await User.update(
-      { name },
-      { where: { id: req.loggedUser.id } } // Alterado para req.loggedUser.id
-    );
+    await User.update({ name }, { where: { id: req.loggedUser.id } });
     res.status(200).json({ success: "Nome atualizado com sucesso." });
   } catch (error) {
     res.status(500).json({ err: "Erro ao atualizar o nome.", error });
@@ -182,7 +176,7 @@ router.put("/users/update-password", auth, async (req, res) => {
   }
 
   try {
-    const user = await User.findByPk(req.loggedUser.id); // Alterado para req.loggedUser.id
+    const user = await User.findByPk(req.loggedUser.id);
     console.log("user", user);
     if (!user) {
       return res.status(404).json({ err: "Usuário não encontrado." });
@@ -197,7 +191,7 @@ router.put("/users/update-password", auth, async (req, res) => {
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
     await User.update(
       { password: hashedPassword },
-      { where: { id: req.loggedUser.id } } // Alterado para req.loggedUser.id
+      { where: { id: req.loggedUser.id } }
     );
     res.status(200).json({ success: "Senha atualizada com sucesso." });
   } catch (error) {

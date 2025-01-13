@@ -31,12 +31,6 @@ const User = connection.define("users", {
   },
 });
 
-//se tiver force: true, ele recria a tabela quando a aplicação rodar. false ele nao recria
 User.sync({ force: false });
-
-//exemplo de slug:
-// caso a categoria tenha como titulo Desenvolvimento Web, o slug seria desenvolvimento-web
-
-// Category.sync({ force: true });
 
 module.exports = User;
