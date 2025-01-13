@@ -7,17 +7,25 @@ const auth = require("../middlewares/auth");
 const multer = require("multer");
 const path = require("path");
 const { Op, Sequelize } = require("sequelize");
+const { v2: cloudinary } = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+require("dotenv").config();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "articles", // Nome da pasta no Cloudinary onde as imagens serão salvas
+    allowed_formats: ["jpg", "png", "jpeg"], // Formatos permitidos
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 router.use((req, res, next) => {
   console.log(`Request URL: ${req.originalUrl}`);
@@ -49,14 +57,14 @@ router.get("/admin/articles", (req, res) => {
 router.post(
   "/articles/save",
   auth,
-  upload.single("coverImage"),
+  upload.single("coverImage"), // Middleware do Cloudinary
   async (req, res) => {
     try {
       const { title, body, categories, summary, language, relatedArticleId } =
         req.body;
-      const coverImage = req.file
-        ? `http://localhost:8080/${req.file.path}`
-        : null;
+
+      // URL da imagem gerada pelo Cloudinary
+      const coverImage = req.file ? req.file.path : null;
 
       if (!title || !body || !categories || !language) {
         return res.status(400).json({
@@ -64,34 +72,29 @@ router.post(
         });
       }
 
+      // Dados do artigo a serem salvos no banco de dados
       const articleData = {
         title: title,
         slug: slugify(title),
         body: body,
         summary: summary,
-        coverImage: coverImage,
+        coverImage: coverImage, // URL do Cloudinary
         language: language,
         relatedArticleId: relatedArticleId ? relatedArticleId : null,
       };
 
+      // Salva o artigo no banco
       const newArticle = await Article.create(articleData);
 
+      // Relaciona o artigo com as categorias
       const categoryIds = categories
         .split(",")
         .map((id) => parseInt(id.trim()));
-
       const categoryInstances = await Category.findAll({
         where: { id: categoryIds },
       });
 
       await newArticle.addCategories(categoryInstances);
-
-      if (relatedArticleId) {
-        const relatedArticle = await Article.findByPk(relatedArticleId);
-        if (relatedArticle) {
-          await relatedArticle.update({ relatedArticleId: newArticle.id });
-        }
-      }
 
       res.status(201).json({ id: newArticle.id, title: newArticle.title });
     } catch (err) {
@@ -181,9 +184,8 @@ router.get("/admin/articles/edit/:id", auth, (req, res) => {
 router.post(
   "/articles/update",
   auth,
-  upload.single("coverImage"),
+  upload.single("coverImage"), // Middleware do Cloudinary
   async (req, res) => {
-    console.log("update: ", req.body);
     try {
       const {
         id,
@@ -194,23 +196,24 @@ router.post(
         language,
         relatedArticleId,
       } = req.body;
-      const coverImage = req.file
-        ? `http://localhost:8080/${req.file.path}`
-        : req.body.coverImage;
+
+      // Se uma nova imagem foi enviada, usa a URL do Cloudinary
+      const coverImage = req.file ? req.file.path : req.body.coverImage;
 
       if (!id || !title || !body || !categories) {
-        return res
-          .status(400)
-          .json({ error: "ID, title, body and categories are required" });
+        return res.status(400).json({
+          error: "ID, title, body, and categories are required",
+        });
       }
 
+      // Atualiza os dados do artigo no banco
       const updatedArticle = await Article.update(
         {
           title: title,
           slug: slugify(title),
           body: body,
           summary: summary,
-          coverImage: coverImage,
+          coverImage: coverImage, // URL atualizada
           language: language,
           relatedArticleId: relatedArticleId || null,
         },
@@ -219,23 +222,27 @@ router.post(
 
       if (updatedArticle[0] === 1) {
         const article = await Article.findByPk(id);
+
+        // Atualiza as categorias, se fornecidas
         if (categories && categories.length > 0) {
-          const categoryIds = Array.isArray(categories)
-            ? categories
-            : [categories];
+          const categoryIds = categories
+            .split(",")
+            .map((id) => parseInt(id.trim()));
           const categoryInstances = await Category.findAll({
-            where: { id: categoryIds.map(Number) },
+            where: { id: categoryIds },
           });
           await article.setCategories(categoryInstances);
         }
+
         res.status(200).json({ message: "Article updated successfully" });
       } else {
         res.status(404).json({ error: "Article not found" });
       }
     } catch (error) {
+      console.error("Error updating article:", error);
       res
         .status(500)
-        .json({ error: "An error occurred while saving the article." });
+        .json({ error: "An error occurred while updating the article." });
     }
   }
 );
