@@ -229,12 +229,22 @@ router.post(
 
       if (updatedArticle[0] === 1) {
         const article = await Article.findByPk(id);
-
+        let categoryIds = "";
         // Atualiza as categorias, se fornecidas
         if (categories && categories.length > 0) {
-          const categoryIds = categories
-            .split(",")
-            .map((id) => parseInt(id.trim()));
+          if (Array.isArray(categories)) {
+            // Se `categories` for um array, use-o diretamente
+            categoryIds = categories.map((id) => parseInt(id));
+          } else if (typeof categories === "string") {
+            // Se `categories` for uma string, divida-a em um array
+            categoryIds = categories
+              .split(",")
+              .map((id) => parseInt(id.trim()));
+          } else {
+            // Caso contrário, lance um erro
+            throw new Error("Formato inválido para categories");
+          }
+
           const categoryInstances = await Category.findAll({
             where: { id: categoryIds },
           });
