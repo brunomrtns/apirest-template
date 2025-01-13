@@ -20,8 +20,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "articles", // Nome da pasta no Cloudinary onde as imagens serão salvas
+    folder: "articles", // Pasta no Cloudinary
     allowed_formats: ["jpg", "png", "jpeg"], // Formatos permitidos
+    resource_type: "image", // Certifique-se de que está configurado como imagem
   },
 });
 
@@ -36,8 +37,11 @@ router.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
+
+  // O Cloudinary retorna a URL pública em req.file.path
+  const link = req.file.path;
   res.json({
-    link: `http://localhost:8080/uploads/${req.file.filename}`,
+    link, // Retorna a URL correta gerada pelo Cloudinary
   });
 });
 
