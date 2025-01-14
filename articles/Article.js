@@ -14,11 +14,11 @@ const Article = connection.define("articles", {
     allowNull: false,
   },
   body: {
-    type: Sequelize.TEXT,
+    type: Sequelize.TEXT, // Para textos longos
     allowNull: false,
   },
   summary: {
-    type: Sequelize.STRING,
+    type: Sequelize.TEXT, // Alterado de STRING para TEXT
     allowNull: true,
   },
   coverImage: {
@@ -39,13 +39,17 @@ const Article = connection.define("articles", {
   },
 });
 
+// Associação entre Article e Category
 const ArticleCategory = connection.define("ArticleCategories", {});
 
 Article.belongsToMany(Category, { through: ArticleCategory });
 Category.belongsToMany(Article, { through: ArticleCategory });
 
-Article.sync({ force: process.env.SYNC_DATABASE === "true" });
-Category.sync({ force: process.env.SYNC_DATABASE === "true" });
-ArticleCategory.sync({ force: process.env.SYNC_DATABASE === "true" });
+// Sincronização das tabelas (controlada pelo ambiente)
+const syncOptions = { alter: process.env.SYNC_DATABASE === "true" };
+
+Article.sync(syncOptions);
+Category.sync(syncOptions);
+ArticleCategory.sync(syncOptions);
 
 module.exports = Article;
