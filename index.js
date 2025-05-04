@@ -18,12 +18,13 @@ app.use("/uploads", express.static(uploadsDir));
 
 app.use(
   cors({
-    origin: "*", // Permite qualquer origem
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Métodos permitidos
-    allowedHeaders: ["Content-Type", "Authorization"], // Cabeçalhos permitidos
-    credentials: false, // Não permite envio de cookies ou credenciais
+    origin: "https://brunomrtnsportfolio.vercel.app", 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // <<< se for mandar cookies/autenticação
   })
 );
+
 app.options("*", cors()); // Responde a todas as requisições OPTIONS
 
 app.use(bodyParser.urlencoded({ extended: false }));
