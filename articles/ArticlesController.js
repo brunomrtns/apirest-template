@@ -165,6 +165,27 @@ router.post("/articles/delete", auth, (req, res) => {
   }
 });
 
+router.get("/admin/articles/search", async (req, res) => {
+  const { title } = req.query;
+
+  try {
+    const articles = await Article.findAll({
+      where: {
+        title: {
+          [Op.like]: `%${title}%`,
+        },
+      },
+      include: [{ model: Category }],
+      order: [["id", "DESC"]],
+    });
+
+    res.json(articles);
+  } catch (error) {
+    console.error("Error fetching articles by title:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/admin/articles/edit/:id", auth, (req, res) => {
   var id = req.params.id;
   if (isNaN(id)) {
